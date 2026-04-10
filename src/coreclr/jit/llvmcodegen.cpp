@@ -593,7 +593,7 @@ void Llvm::generateUnwindBlocks()
             // Emit this intrinsic so that we get "typed" WASM "catch" instructions, which will not catch any foreign
             // exceptions, like "catch_all" would. While foreign exceptions propagating through managed code are UB in
             // the general case, "exit" C call and thus "Environment.Exit" use them and so are exempted.
-            _builder.CreateIntrinsic(llvm::Intrinsic::wasm_get_exception, {}, catchPadInst);
+            _builder.CreateIntrinsic(getLlvmTypeForVarType(TYP_REF), llvm::Intrinsic::wasm_get_exception, {catchPadInst});
         }
 
         // Eagerly initialize the unwind block to emit the calls below.
@@ -3128,7 +3128,7 @@ void Llvm::emitUnwindToOuterHandler()
     if (m_ehModel == CORINFO_LLVM_EH_WASM)
     {
         Function* wasmRethrowLlvmFunc =
-            llvm::Intrinsic::getDeclaration(&m_context->Module, llvm::Intrinsic::wasm_rethrow);
+            llvm::Intrinsic::getOrInsertDeclaration(&m_context->Module, llvm::Intrinsic::wasm_rethrow);
         emitCallOrInvoke(wasmRethrowLlvmFunc, {}, CSF_NONE);
         _builder.CreateUnreachable();
     }
@@ -3213,7 +3213,7 @@ llvm::CatchPadInst* Llvm::getCatchPadForHandler(unsigned hndIndex)
     }
 
     llvm::BasicBlock* catchPadLlvmBlock = catchSwitchLlvmBlock->getNextNode();
-    llvm::CatchPadInst* catchPadInst = llvm::cast<llvm::CatchPadInst>(catchPadLlvmBlock->getFirstNonPHI());
+    llvm::CatchPadInst* catchPadInst = llvm::cast<llvm::CatchPadInst>(&*catchPadLlvmBlock->getFirstNonPHIIt());
     return catchPadInst;
 }
 

@@ -454,7 +454,7 @@ private:
         if (pInfo->TypeOfThisPointer != NO_DEBUG_TYPE)
         {
             DIType* objPtrType = GetEmittedType(pInfo->TypeOfThisPointer);
-            debugParameters.push_back(m_diBuilder.createObjectPointerType(objPtrType));
+            debugParameters.push_back(m_diBuilder.createObjectPointerType(objPtrType, 0));
         }
         for (size_t i = 0; i < pInfo->NumberOfArguments; i++)
         {
@@ -663,10 +663,10 @@ void Llvm::declareDebugVariables()
 
         llvm::DILocalVariable* debugVariable = lcl->GetValue();
         DIExpression* debugExpression = m_diBuilder->createExpression(AsRef(diExpression));
-        Instruction* debugInst =
+        auto debugInst =
             m_diBuilder->insertDeclare(addressValue, debugVariable, debugExpression, debugLocation, insertBlock);
         JITDUMP("Declaring V%02u:\n", lclNum);
-        JITDUMPEXEC(displayValue(debugInst));
+        if (llvm::isa<Instruction*>(debugInst)) { JITDUMPEXEC(displayValue(llvm::cast<Instruction*>(debugInst))); }
     }
 }
 
@@ -682,7 +682,7 @@ void Llvm::assignDebugVariable(unsigned lclNum, Value* value)
             : m_diBuilder->createExpression();
 
         DILocation* debugLocation = getCurrentOrArtificialDebugLocation();
-        Instruction* debugInst;
+        llvm::DbgInstPtr debugInst;
         if (_builder.GetInsertPoint() == _builder.GetInsertBlock()->end())
         {
             debugInst = m_diBuilder->insertDbgValueIntrinsic(
@@ -691,9 +691,9 @@ void Llvm::assignDebugVariable(unsigned lclNum, Value* value)
         else
         {
             debugInst = m_diBuilder->insertDbgValueIntrinsic(
-                value, debugVariable, diExpression, debugLocation, &*_builder.GetInsertPoint());
+                value, debugVariable, diExpression, debugLocation, _builder.GetInsertBlock());
         }
-        DBEXEC(CurrentBlock() == nullptr, JITDUMPEXEC(displayValue(debugInst)));
+        DBEXEC(CurrentBlock() == nullptr && llvm::isa<Instruction*>(debugInst), JITDUMPEXEC(displayValue(llvm::cast<Instruction*>(debugInst))));
     }
 }
 

@@ -33,8 +33,20 @@ The .NET Foundation licenses this file to you under the MIT license.
     </PropertyGroup>
   </Target>
 
+  <Target Name="_InitializeZigToolchain"
+          Condition="'$(_targetOS)' == 'wasi' and '$(UseZigToolchain)' == 'true'">
+    <Error Text="ZigPath must be set when UseZigToolchain=true (e.g., ZigPath=/path/to/zig)"
+           Condition="'$(ZigPath)' == ''" />
+
+    <PropertyGroup>
+      <CppCompiler Condition="'$(CppCompiler)' == ''">&quot;$(ZigPath)&quot; cc</CppCompiler>
+      <CppLinker Condition="'$(CppLinker)' == ''">&quot;$(ZigPath)&quot; wasm-ld</CppLinker>
+      <CppLibCreator Condition="'$(CppLibCreator)' == ''">&quot;$(ZigPath)&quot; ar</CppLibCreator>
+    </PropertyGroup>
+  </Target>
+
   <Target Name="_InitializeWasiSdk"
-          Condition="'$(_targetOS)' == 'wasi'">
+          Condition="'$(_targetOS)' == 'wasi' and '$(UseZigToolchain)' != 'true'">
     <Error Text="Wasi SDK not found, not compiling to WebAssembly. To enable WebAssembly compilation, install Wasi SDK and ensure the WASI_SDK_PATH environment variable points to the directory containing share/wasi-sysroot"
            Condition="'$(WASI_SDK_PATH)' == ''" />
 
@@ -57,7 +69,7 @@ The .NET Foundation licenses this file to you under the MIT license.
   </Target>
 
   <!-- Part of workaround for lack of secondary build artifact import - https://github.com/Microsoft/msbuild/issues/2807 -->
-  <Target Name="SetupOSSpecificProps" DependsOnTargets="_InitializeEmsdk;_InitializeWasiSdk">
+  <Target Name="SetupOSSpecificProps" DependsOnTargets="_InitializeEmsdk;_InitializeZigToolchain;_InitializeWasiSdk">
     <PropertyGroup>
       <_HostToolExeExt Condition="$([System.OperatingSystem]::IsWindows())">.exe</_HostToolExeExt>
       <CppLibCreator Condition="'$(CppLibCreator)' == ''">$(_NativeWasmSdkBinPath)llvm-ar$(_HostToolExeExt)</CppLibCreator>

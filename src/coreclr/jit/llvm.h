@@ -24,6 +24,7 @@
 #pragma warning(disable : 4702)
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/Module.h"
 #pragma warning(pop)
 
 // Forward-declare some LLVM types to avoid including the corresponding header into each compilation unit.

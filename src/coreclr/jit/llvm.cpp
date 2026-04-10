@@ -868,7 +868,7 @@ static SingleThreadedCompilationContext* StartSingleThreadedCompilation(
     const char* dataLayout)
 {
     SingleThreadedCompilationContext* context = new SingleThreadedCompilationContext(flags, path);
-    context->Module.setTargetTriple(triple);
+    context->Module.setTargetTriple(llvm::Triple(triple));
     context->Module.setDataLayout(dataLayout);
 
     return context;

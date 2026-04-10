@@ -5,7 +5,7 @@ add_library(WasmExceptionHandling STATIC ExceptionHandling.Wasm.cpp)
 add_library(EmulatedExceptionHandling STATIC ExceptionHandling.Emulated.cpp)
 
 target_compile_options(CppExceptionHandling PRIVATE -fexceptions)
-target_compile_options(WasmExceptionHandling PRIVATE -fwasm-exceptions)
+target_compile_options(WasmExceptionHandling PRIVATE -fwasm-exceptions -mexception-handling)
 
 install_static_library(CppExceptionHandling aotsdk nativeaot)
 install_static_library(WasmExceptionHandling aotsdk nativeaot)
